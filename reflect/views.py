@@ -2,8 +2,12 @@ from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import*
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import permission_classes
+
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def feed(request):
 
     user_profile = request.user.userprofile
@@ -17,7 +21,6 @@ def feed(request):
 
     for post in posts:
 
-        # Get comments for this post
         comments = post.comment_set.all()
 
         comment_data = []
@@ -28,7 +31,6 @@ def feed(request):
                 "text": c.text
             })
 
-        # Get AI feedback for this post
         ai_feedback = AIFeedback.objects.filter(post=post)
 
         feedback_data = []
@@ -49,9 +51,10 @@ def feed(request):
 
     return Response(data)
 
-
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_post(request):
+
 
     user_profile = request.user.userprofile
 
@@ -81,3 +84,25 @@ def generate_fake_feedback(content):
         {"persona": "Critic", "feedback": "Needs clearer reasoning."},
         {"persona": "Optimist", "feedback": "Strong positive direction!"}
     ]
+
+
+from django.contrib.auth.models import User
+
+@api_view(['POST'])
+def register(request):
+
+    username = request.data.get("username")
+    password = request.data.get("password")
+
+    if User.objects.filter(username=username).exists():
+        return Response({"error": "User already exists"}, status=400)
+
+    user = User.objects.create_user(
+        username=username,
+        password=password
+    )
+
+    org = Organization.objects.first()
+    UserProfile.objects.create(user=user, organization=org)
+
+    return Response({"message": "User created successfully"})
