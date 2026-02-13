@@ -1,16 +1,27 @@
 from django.shortcuts import render
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from .models import*
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import permission_classes
+from django.contrib.auth.models import User
 
+from .models import (
+    Post,
+    Comment,
+    AIFeedback,
+    Organization,
+    UserProfile
+)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def feed(request):
 
-    user_profile = request.user.userprofile
+    # Safe profile check
+    try:
+        user_profile = request.user.userprofile
+    except UserProfile.DoesNotExist:
+        return Response({"error": "User profile not found"}, status=400)
+
     org = user_profile.organization
 
     posts = Post.objects.filter(
@@ -22,7 +33,6 @@ def feed(request):
     for post in posts:
 
         comments = post.comment_set.all()
-
         comment_data = []
 
         for c in comments:
@@ -51,12 +61,15 @@ def feed(request):
 
     return Response(data)
 
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_post(request):
 
-
-    user_profile = request.user.userprofile
+    try:
+        user_profile = request.user.userprofile
+    except UserProfile.DoesNotExist:
+        return Response({"error": "User profile not found"}, status=400)
 
     post = Post.objects.create(
         author=request.user,
@@ -74,25 +87,17 @@ def create_post(request):
             feedback=f["feedback"]
         )
 
-
     return Response({"message": "Post created"})
 
-def generate_fake_feedback(content):
-
-    return [
-        {"persona": "Mentor", "feedback": "Good insight, consider expanding."},
-        {"persona": "Critic", "feedback": "Needs clearer reasoning."},
-        {"persona": "Optimist", "feedback": "Strong positive direction!"}
-    ]
-
-
-from django.contrib.auth.models import User
 
 @api_view(['POST'])
 def register(request):
 
     username = request.data.get("username")
     password = request.data.get("password")
+
+    if not username or not password:
+        return Response({"error": "Username and password required"}, status=400)
 
     if User.objects.filter(username=username).exists():
         return Response({"error": "User already exists"}, status=400)
@@ -102,7 +107,24 @@ def register(request):
         password=password
     )
 
+    # ensure organization exists
     org = Organization.objects.first()
-    UserProfile.objects.create(user=user, organization=org)
+
+    if not org:
+        org = Organization.objects.create(name="Default Org")
+
+    UserProfile.objects.create(
+        user=user,
+        organization=org
+    )
 
     return Response({"message": "User created successfully"})
+
+
+def generate_fake_feedback(content):
+
+    return [
+        {"persona": "Mentor", "feedback": "Good insight, consider expanding."},
+        {"persona": "Critic", "feedback": "Needs clearer reasoning."},
+        {"persona": "Optimist", "feedback": "Strong positive direction!"}
+    ]
