@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../constants/colours.dart';
+import '../constants/colors.dart';
 import '../constants/typography.dart';
 import '../constants/sizes.dart';
 
