@@ -34,3 +34,14 @@ class Post(models.Model):
 
     def __str__(self):
         return f"{self.author.username} - {self.post_type}"
+
+class Comment(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class AIFeedback(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    persona = models.CharField(max_length=100)
+    feedback = models.TextField()
