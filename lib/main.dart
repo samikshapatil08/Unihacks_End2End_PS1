@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:orgmind/core/utils/responsive.dart';
+import 'package:orgmind/web/screens/home/web_home_screen.dart';
 import 'core/theme/app_theme.dart';
 import 'mobile/screens/login/login_screen.dart';
 import 'mobile/screens/home/home_screen.dart';
@@ -27,7 +29,7 @@ class ReflectionApp extends StatelessWidget {
       initialRoute: '/login',
       routes: {
         '/login': (context) => const LoginScreen(),
-        '/home': (context) => const HomeScreen(),
+        '/home': (context) => Responsive(mobile: HomeScreen(), web: WebHomeScreen()),
         '/create': (context) => const CreateReflectionScreen(),
         '/post': (context) => const PostDetailScreen(),
         '/analysis': (context) => const AiAnalysisScreen(),
