@@ -1,21 +1,65 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/post_model.dart';
+import '../../../data/repositories/post_repository.dart';
 import '../../../core/constants/typography.dart';
-import '../../../core/constants/colors.dart';
+import '../../../core/utils/pdf_exporter.dart';
 import '../../../shared/widgets/avatar.dart';
 import '../../../shared/widgets/tag_chip.dart';
 import '../../../shared/widgets/comment_tile.dart';
-import '../../../core/utils/pdf_exporter.dart';
 import '../../widgets/web_scaffold.dart';
 
-class WebPostDetailScreen extends StatelessWidget {
-  final GlobalKey _printKey = GlobalKey();
-
+class WebPostDetailScreen extends StatefulWidget {
   WebPostDetailScreen({super.key});
 
   @override
+  State<WebPostDetailScreen> createState() => _WebPostDetailScreenState();
+}
+
+class _WebPostDetailScreenState extends State<WebPostDetailScreen> {
+  final _printKey = GlobalKey();
+  final _repo = PostRepository();
+  List<CommentDto> _comments = [];
+  bool _commentsLoading = false;
+  final _commentController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final post = ModalRoute.of(context)?.settings.arguments as PostModel?;
+    if (post != null) _loadComments(post.id);
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadComments(String postId) async {
+    setState(() => _commentsLoading = true);
+    final list = await _repo.getComments(postId);
+    if (mounted) setState(() { _comments = list; _commentsLoading = false; });
+  }
+
+  Future<void> _submitComment(String postId) async {
+    final content = _commentController.text.trim();
+    if (content.isEmpty) return;
+    _commentController.clear();
+    final created = await _repo.createComment(postId, content);
+    if (created != null && mounted) {
+      setState(() => _comments = [..._comments, created]);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final post = ModalRoute.of(context)!.settings.arguments as PostModel;
+    final post = ModalRoute.of(context)?.settings.arguments as PostModel?;
+    if (post == null) {
+      return WebScaffold(
+        title: 'Reflection Detail',
+        body: SafeArea(child: const Center(child: Text('Post not found'))),
+      );
+    }
 
     return WebScaffold(
       title: 'Reflection Detail',
@@ -27,7 +71,7 @@ class WebPostDetailScreen extends StatelessWidget {
         ),
         IconButton(
           icon: const Icon(Icons.analytics_outlined),
-          onPressed: () => Navigator.pushNamed(context, '/analysis'),
+          onPressed: () => Navigator.pushNamed(context, '/analysis', arguments: post),
           tooltip: 'View AI Analysis',
         ),
       ],
@@ -36,9 +80,9 @@ class WebPostDetailScreen extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(40),
           decoration: BoxDecoration(
-            color: AppColors.card,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: Theme.of(context).dividerColor),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,22 +109,16 @@ class WebPostDetailScreen extends StatelessWidget {
               const SizedBox(height: 40),
               Wrap(spacing: 12, children: post.tags.map((t) => TagChip(label: t)).toList()),
               const Divider(height: 80),
-              Text('Discussion (3)', style: AppTypography.h2),
-              const SizedBox(height: 24),
-              const CommentTile(
-                name: 'David Kim',
-                role: 'Senior Engineer',
-                time: '1h ago',
-                content: 'This resonates deeply with me. I had a similar realization during our last sprint.',
-              ),
-              const CommentTile(
-                name: 'Lisa Zhang',
-                role: 'UX Researcher',
-                time: '45m ago',
-                content: 'Would love to hear more about your interview process.',
-              ),
+              Text('Discussion (${_comments.length})', style: AppTypography.h2),
+              if (_commentsLoading) const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator())),
+              ..._comments.map((c) => CommentTile(
+                    name: c.userName,
+                    role: '',
+                    time: _formatTimeAgo(c.createdAt),
+                    content: c.content,
+                  )),
               const SizedBox(height: 32),
-              _buildCommentInput(),
+              _buildCommentInput(post.id),
             ],
           ),
         ),
@@ -88,19 +126,43 @@ class WebPostDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCommentInput() {
+  String _formatTimeAgo(String iso) {
+    if (iso.isEmpty) return '';
+    try {
+      final dt = DateTime.parse(iso);
+      final diff = DateTime.now().difference(dt);
+      if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+      if (diff.inHours < 24) return '${diff.inHours}h ago';
+      if (diff.inDays < 7) return '${diff.inDays}d ago';
+      return '${diff.inDays ~/ 7}w ago';
+    } catch (_) {
+      return iso;
+    }
+  }
+
+  Widget _buildCommentInput(String postId) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.softSection,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          const AppAvatar(name: 'John Doe', size: 32),
+          AppAvatar(name: 'User', size: 32),
           const SizedBox(width: 16),
-          const Expanded(child: TextField(decoration: InputDecoration(hintText: 'Add a thoughtful comment...', border: InputBorder.none, enabledBorder: InputBorder.none))),
-          ElevatedButton(onPressed: () {}, child: const Text('Post')),
+          Expanded(
+            child: TextField(
+              controller: _commentController,
+              decoration: const InputDecoration(
+                hintText: 'Add a thoughtful comment...',
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+              ),
+              onSubmitted: (_) => _submitComment(postId),
+            ),
+          ),
+          ElevatedButton(onPressed: () => _submitComment(postId), child: const Text('Post')),
         ],
       ),
     );

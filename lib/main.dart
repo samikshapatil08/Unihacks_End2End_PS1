@@ -6,12 +6,14 @@ import 'package:orgmind/web/screens/audio_discussion/web_audio_discussion_screen
 import 'package:orgmind/web/screens/create_reflection/web_create_reflection_screen.dart';
 import 'package:orgmind/web/screens/home/web_home_screen.dart';
 import 'package:orgmind/web/screens/login/web_login_screen.dart';
+import 'package:orgmind/web/screens/signup/web_signup_screen.dart';
 import 'package:orgmind/web/screens/persona_chat/web_persona_chat_screen.dart';
 import 'package:orgmind/web/screens/post_detail/web_post_detail_screen.dart';
 import 'package:orgmind/web/screens/profile/web_profile_screen.dart';
 import 'package:orgmind/web/screens/vault/web_vault_screen.dart';
 import 'core/theme/app_theme.dart';
 import 'mobile/screens/login/login_screen.dart';
+import 'mobile/screens/signup/signup_screen.dart';
 import 'mobile/screens/home/home_screen.dart';
 import 'mobile/screens/create_reflection/create_reflection_screen.dart';
 import 'mobile/screens/post_detail/post_detail_screen.dart';
@@ -36,7 +38,8 @@ class ReflectionApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       initialRoute: '/login',
       routes: {
-        '/login': (context) => Responsive(mobile: LoginScreen(), web: WebLoginScreen()),
+        '/login': (context) => Responsive(mobile: const LoginScreen(), web: const WebLoginScreen()),
+        '/signup': (context) => Responsive(mobile: const SignupScreen(), web: const WebSignupScreen()),
         '/home': (context) => Responsive(mobile: HomeScreen(), web: WebHomeScreen()),
         '/create': (context) => Responsive(mobile:CreateReflectionScreen(), web:WebCreateReflectionScreen()),
         '/post': (context) => Responsive(mobile: const PostDetailScreen(),web: WebPostDetailScreen()),

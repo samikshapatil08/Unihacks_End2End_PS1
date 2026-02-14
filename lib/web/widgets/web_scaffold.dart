@@ -52,12 +52,14 @@ class WebScaffold extends StatelessWidget {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        child: ResponsiveContainer(
-          maxWidth: 1000,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 40),
-            child: body,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: ResponsiveContainer(
+            maxWidth: 1000,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: body,
+            ),
           ),
         ),
       ),

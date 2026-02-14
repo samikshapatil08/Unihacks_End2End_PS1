@@ -10,8 +10,9 @@ class VaultScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Knowledge Vault')),
-      body: ListView(
-        padding: const EdgeInsets.all(24),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(24),
         children: [
           TextField(decoration: InputDecoration(prefixIcon: const Icon(Icons.search), hintText: 'Search saved reflections...')),
           const SizedBox(height: 24),
@@ -41,6 +42,7 @@ class VaultScreen extends StatelessWidget {
             ),
           ),
         ],
+        ),
       ),
     );
   }

@@ -1,18 +1,33 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/colors.dart';
 import '../../../core/constants/typography.dart';
+import '../../../data/models/audio_model.dart';
 import '../../../shared/widgets/avatar.dart';
 import '../../../shared/widgets/audio_player_bar.dart';
 import '../../../core/utils/pdf_exporter.dart';
 import '../../widgets/web_scaffold.dart';
 
-class WebAudioDiscussionScreen extends StatelessWidget {
-  final GlobalKey _printKey = GlobalKey();
+class WebAudioDiscussionScreen extends StatefulWidget {
+  const WebAudioDiscussionScreen({super.key});
 
-  WebAudioDiscussionScreen({super.key});
+  @override
+  State<WebAudioDiscussionScreen> createState() => _WebAudioDiscussionScreenState();
+}
+
+class _WebAudioDiscussionScreenState extends State<WebAudioDiscussionScreen> {
+  final GlobalKey _printKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args == null || args is! AudioModel) {
+      return WebScaffold(
+        title: 'Audio Discussion',
+        body: Center(child: Text('No audio selected.', style: AppTypography.bodyMedium)),
+      );
+    }
+    final a = args;
+    final authorLabel = a.timeAgo != null ? '${a.authorName} • ${a.timeAgo}' : a.authorName;
+
     return WebScaffold(
       title: 'Audio Discussion',
       actions: [
@@ -27,66 +42,60 @@ class WebAudioDiscussionScreen extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Left Column: Player and Info
             Expanded(
               flex: 2,
               child: Container(
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
-                  color: AppColors.card,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: Theme.of(context).dividerColor),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        const AppAvatar(name: 'Sarah Chen', size: 54), // [cite: 194]
+                        AppAvatar(name: a.authorName, size: 54),
                         const SizedBox(width: 16),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Sarah Chen', style: AppTypography.h2), // [cite: 194]
-                            Text('Product Designer • 3h ago', style: AppTypography.bodySmall), // [cite: 196, 198]
+                            Text(a.authorName, style: AppTypography.h2),
+                            Text(authorLabel, style: AppTypography.bodySmall),
                           ],
                         ),
-                        const Spacer(),
-                        const Chip(label: Text('Retrospective')), // [cite: 199]
                       ],
                     ),
                     const SizedBox(height: 32),
-                    Text('Q4 Product Launch Retrospective', style: AppTypography.h1.copyWith(fontSize: 28)), // [cite: 197]
+                    Text(a.title, style: AppTypography.h1.copyWith(fontSize: 28)),
                     const SizedBox(height: 32),
-                    const AudioPlayerBar(currentPos: '1:27', totalDur: '4:05'), // [cite: 200, 201]
-                    const SizedBox(height: 40),
-                    Text('Team Responses (3)', style: AppTypography.h2), // 
-                    const SizedBox(height: 16),
-                    _buildResponseTile('Michael Rodriguez', '2:15'), // [cite: 233, 236]
-                    _buildResponseTile('Emma Williams', '1:42'), // [cite: 234, 237]
-                    _buildResponseTile('David Kim', '3:08'), // [cite: 239, 240]
+                    AudioPlayerBar(currentPos: '0:00', totalDur: a.duration),
                   ],
                 ),
               ),
             ),
             const SizedBox(width: 32),
-            // Right Column: Transcript
             Expanded(
               flex: 1,
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: AppColors.softSection,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Transcript', style: AppTypography.h2), // 
+                    Text('Transcript', style: AppTypography.h2),
                     const SizedBox(height: 16),
-                    Text(
-                      "Hey everyone, I wanted to take a moment to reflect on our Q4 product launch. Overall, I think we did an amazing job, but there are definitely lessons we can take forward.\n\nFirst, the positive: our cross-functional collaboration was exceptional. The way engineering, design, and product worked together during the final sprint was exactly what was needed. We shipped on time and the quality was solid.", // [cite: 203-215]
-                      style: AppTypography.bodyMedium.copyWith(height: 1.8),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Text(
+                          a.transcript ?? 'No transcript available.',
+                          style: AppTypography.bodyMedium.copyWith(height: 1.8),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -94,22 +103,6 @@ class WebAudioDiscussionScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildResponseTile(String name, String duration) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: AppAvatar(name: name, size: 32),
-      title: Text(name, style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(duration, style: AppTypography.bodySmall),
-          const SizedBox(width: 8),
-          const Icon(Icons.play_arrow_outlined, size: 20),
-        ],
       ),
     );
   }

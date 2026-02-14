@@ -1,6 +1,7 @@
 import '../../data/models/post_model.dart';
 import '../../data/models/comment_model.dart';
 import '../../data/models/persona_model.dart';
+import '../../data/models/audio_model.dart';
 
 class MockDataService {
   static List<PostModel> getMockPosts() {
@@ -49,6 +50,29 @@ class MockDataService {
         name: 'Team Psychologist',
         description: 'Focuses on emotional intelligence and safety.',
         insight: 'Sarah awareness of non-verbal communication extends to teams.',
+      ),
+    ];
+  }
+
+  static List<AudioModel> getMockAudio() {
+    return [
+      AudioModel(
+        id: '1',
+        title: 'Q4 Product Launch Retrospective',
+        duration: '4:05',
+        authorName: 'Sarah Chen',
+      ),
+      AudioModel(
+        id: '2',
+        title: 'Learning from Our Recent Outage',
+        duration: '6:22',
+        authorName: 'Michael Rodriguez',
+      ),
+      AudioModel(
+        id: '3',
+        title: 'User Research Session Highlights',
+        duration: '3:41',
+        authorName: 'Sarah Chen',
       ),
     ];
   }
