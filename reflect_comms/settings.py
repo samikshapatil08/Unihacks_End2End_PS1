@@ -72,9 +72,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'reflect_comms.wsgi.application'
 
+# Default primary key type (avoids AutoField warnings on models without explicit primary_key)
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+# Supabase: use DIRECT (db.xxx.supabase.co:5432) for migrations; pooler :6543 can close connections.
 
 from decouple import config
 
@@ -85,7 +88,11 @@ DATABASES = {
         'USER': config('DB_USER'),
         'PASSWORD': config('DB_PASSWORD'),
         'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT'),
+        'PORT': config('DB_PORT', default='5432'),
+        'OPTIONS': {
+            'sslmode': 'require',
+            'connect_timeout': 10,
+        },
     }
 }
 
@@ -127,12 +134,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / "media"
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
-
-STATIC_ROOT = BASE_DIR / "staticfiles"
 

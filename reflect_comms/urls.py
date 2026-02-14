@@ -16,8 +16,23 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.http import JsonResponse
+
+def api_root(request):
+    return JsonResponse({
+        "message": "Reflect API",
+        "docs": "Use /api/ for all endpoints.",
+        "endpoints": {
+            "admin": "/admin/",
+            "auth": "/api/auth/register/, /api/auth/login/, /api/auth/me/",
+            "posts": "/api/posts/",
+            "profile": "/api/profile/",
+            "organization": "/api/organization/",
+        },
+    })
 
 urlpatterns = [
+    path('', api_root),
     path('admin/', admin.site.urls),
     path('api/', include('reflect.urls')),
 ]
